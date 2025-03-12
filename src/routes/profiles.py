@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from schemas import ProfileResponseSchema, ProfileCreate
 
 
@@ -19,18 +19,14 @@ async def create_profile(
     existing_movie = existing_result.scalars().first()
     if existing_movie:
         raise HTTPException(
-            status_code=404,
+            status_code=400,
         )
 
     if not profile_data.is_active:
         raise HTTPException(
-            status_code=404,
+            status_code=401,
         )
 
-    if profile_data.is_active:
-        raise HTTPException(
-            status_code=404,
-        )
 
     new_profile = UserProfileModel(
         id=profile_data.id,
@@ -41,7 +37,7 @@ async def create_profile(
         info=profile_data.info
     )
 
-    db.add(new_profile)
-    db.commit(new_profile)
-    db.refresh(new_profile)
+    await db.add(new_profile)
+    await  db.commit(new_profile)
+    await db.refresh(new_profile)
     return new_profile
